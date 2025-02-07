@@ -15,6 +15,9 @@ axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('Adding token to request:', config.url);
+  } else {
+    console.log('No token found for request:', config.url);
   }
   return config;
 }, (error) => {
@@ -23,8 +26,12 @@ axiosInstance.interceptors.request.use((config) => {
 
 // Handle response errors
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response from:', response.config.url, response.status);
+    return response;
+  },
   (error) => {
+    console.error('API Error:', error.config.url, error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
@@ -41,8 +48,7 @@ export const authApi = {
     axiosInstance.post('/auth/signup', { 
       username, 
       email, 
-      password,
-      role: ["user"] // Add default role
+      password
     }),
 };
 
@@ -69,7 +75,7 @@ export const searchHistoryApi = {
 // Favorites API
 export const favoriteApi = {
   addToFavorites: (pixabayId, { params }) => 
-    axiosInstance.post(`/favorites/${pixabayId}?url=${encodeURIComponent(params.url)}&tags=${encodeURIComponent(params.tags)}&user=${encodeURIComponent(params.user)}`),
+    axiosInstance.post(`/favorites/${pixabayId}`, params),
   removeFromFavorites: (pixabayId) =>
     axiosInstance.delete(`/favorites/${pixabayId}`),
   checkFavorite: (pixabayId) =>

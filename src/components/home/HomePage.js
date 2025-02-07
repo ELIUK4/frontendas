@@ -46,28 +46,51 @@ const HomePage = () => {
   useEffect(() => {
     const fetchRandomImages = async () => {
       try {
-        const response = await imageApi.search('camera photography', {
-          per_page: 9,
-          image_type: 'photo',
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No authentication token found');
+          setLoading(false);
+          return;
+        }
+
+        const response = await imageApi.search('professional camera DSLR', {
+          perPage: 12,
+          imageType: 'photo',
           orientation: 'horizontal',
-          safesearch: true,
+          category: 'science'
         });
-        setImages(response.data.hits);
-        
-        // Check favorite status for each image
-        response.data.hits.forEach(async (image) => {
-          try {
-            const isFavorite = await favoriteApi.checkFavorite(image.id);
-            setFavorites(prev => ({
-              ...prev,
-              [image.id]: isFavorite
-            }));
-          } catch (error) {
-            console.error('Failed to check favorite status:', error);
-          }
-        });
+
+        console.log('Image search response:', response);
+        if (response.data && response.data.hits && response.data.hits.length > 0) {
+          setImages(response.data.hits);
+          
+          // Check favorite status for each image
+          response.data.hits.forEach(async (image) => {
+            try {
+              const isFavorite = await favoriteApi.checkFavorite(image.id);
+              setFavorites(prev => ({
+                ...prev,
+                [image.id]: isFavorite
+              }));
+            } catch (error) {
+              console.error('Failed to check favorite status:', error);
+            }
+          });
+        } else {
+          console.error('No images found in response:', response);
+          setSnackbar({
+            open: true,
+            message: 'Failed to load images. Please try again later.',
+            severity: 'error'
+          });
+        }
       } catch (error) {
         console.error('Failed to fetch images:', error);
+        setSnackbar({
+          open: true,
+          message: 'Failed to load images. Please try again later.',
+          severity: 'error'
+        });
       } finally {
         setLoading(false);
       }

@@ -31,7 +31,7 @@ const authSlice = createSlice({
         const decoded = jwtDecode(token);
         state.user = {
           username: decoded.sub,
-          roles: JSON.parse(decoded.roles.replace(/'/g, '"')),
+          roles: Array.isArray(decoded.roles) ? decoded.roles : [decoded.roles],
         };
         state.isAuthenticated = true;
       }
@@ -57,7 +57,7 @@ const authSlice = createSlice({
           const decoded = jwtDecode(token);
           state.user = {
             username: decoded.sub,
-            roles: JSON.parse(decoded.roles.replace(/'/g, '"')),
+            roles: Array.isArray(decoded.roles) ? decoded.roles : [decoded.roles],
           };
           state.isAuthenticated = true;
         }

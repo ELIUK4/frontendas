@@ -26,13 +26,22 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    console.log('Attempting to register user:', username);
     try {
       const response = await authApi.register(username, email, password);
+      console.log('Registration successful:', response.data);
       // If registration is successful, automatically log in
       const loginResponse = await authApi.login(username, password);
-      dispatch(setCredentials({ token: loginResponse.data.token }));
+      console.log('Login successful:', loginResponse.data);
+      const token = loginResponse.data.token;
+      console.log('Setting token:', token);
+      localStorage.setItem('token', token);
+      dispatch(setCredentials({ token }));
       navigate('/');
     } catch (err) {
+      console.error('Registration error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to register');
     } finally {
       setLoading(false);
