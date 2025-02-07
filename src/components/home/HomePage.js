@@ -28,7 +28,8 @@ import {
   Close,
   Send,
   BookmarkBorder,
-  Bookmark
+  Bookmark,
+  KeyboardArrowDown
 } from '@mui/icons-material';
 import { imageApi, favoriteApi } from '../../services/api';
 import { Link } from 'react-router-dom';
@@ -42,6 +43,7 @@ const HomePage = () => {
   const [likes, setLikes] = useState({});
   const [favorites, setFavorites] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [showGallery, setShowGallery] = useState(false);
 
   useEffect(() => {
     const fetchRandomImages = async () => {
@@ -60,11 +62,9 @@ const HomePage = () => {
           category: 'science'
         });
 
-        console.log('Image search response:', response);
         if (response.data && response.data.hits && response.data.hits.length > 0) {
           setImages(response.data.hits);
           
-          // Check favorite status for each image
           response.data.hits.forEach(async (image) => {
             try {
               const isFavorite = await favoriteApi.checkFavorite(image.id);
@@ -77,7 +77,6 @@ const HomePage = () => {
             }
           });
         } else {
-          console.error('No images found in response:', response);
           setSnackbar({
             open: true,
             message: 'Failed to load images. Please try again later.',
@@ -107,6 +106,26 @@ const HomePage = () => {
     setSelectedImage(null);
   };
 
+  const handleCommentChange = (event) => {
+    setComment(event.target.value);
+  };
+
+  const handleCommentSubmit = (imageId) => {
+    if (comment.trim()) {
+      const newComment = {
+        text: comment,
+        user: 'User',
+        timestamp: new Date().toISOString()
+      };
+
+      setComments(prev => ({
+        ...prev,
+        [imageId]: [...(prev[imageId] || []), newComment]
+      }));
+      setComment('');
+    }
+  };
+
   const handleLike = (imageId) => {
     setLikes(prev => ({
       ...prev,
@@ -114,55 +133,32 @@ const HomePage = () => {
     }));
   };
 
-  const handleFavorite = async (image) => {
+  const handleFavorite = async (imageId) => {
     try {
-      if (favorites[image.id]) {
-        await favoriteApi.removeFromFavorites(image.id);
-        setSnackbar({
-          open: true,
-          message: 'Removed from favorites',
-          severity: 'success'
-        });
+      if (favorites[imageId]) {
+        await favoriteApi.removeFavorite(imageId);
       } else {
-        await favoriteApi.addToFavorites(image.id, {
-          params: {
-            url: image.webformatURL,
-            tags: image.tags,
-            user: image.user
-          }
-        });
-        setSnackbar({
-          open: true,
-          message: 'Added to favorites',
-          severity: 'success'
-        });
+        await favoriteApi.addFavorite(imageId);
       }
+      
       setFavorites(prev => ({
         ...prev,
-        [image.id]: !prev[image.id]
+        [imageId]: !prev[imageId]
       }));
-    } catch (error) {
+
       setSnackbar({
         open: true,
-        message: 'Please login to add favorites',
+        message: favorites[imageId] ? 'Removed from favorites' : 'Added to favorites',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Failed to update favorite:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to update favorite. Please try again.',
         severity: 'error'
       });
-      console.error('Failed to update favorite:', error);
     }
-  };
-
-  const handleCommentSubmit = (imageId) => {
-    if (!comment.trim()) return;
-    
-    setComments(prev => ({
-      ...prev,
-      [imageId]: [...(prev[imageId] || []), {
-        text: comment,
-        author: 'User',
-        timestamp: new Date().toISOString()
-      }]
-    }));
-    setComment('');
   };
 
   const handleCloseSnackbar = () => {
@@ -170,259 +166,197 @@ const HomePage = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-        py: 8
-      }}
-    >
-      <Container maxWidth="lg">
-        <Box 
-          sx={{ 
-            textAlign: 'center', 
-            mb: 6,
-            p: 4,
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 2,
-            backdropFilter: 'blur(10px)'
+    <Box sx={{ minHeight: '100vh' }}>
+      {/* Landing Page */}
+      <Box
+        sx={{
+          height: '100vh',
+          width: '100%',
+          position: 'relative',
+          display: showGallery ? 'none' : 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundImage: 'url(https://images.pexels.com/photos/243757/pexels-photo-243757.jpeg?auto=compress&cs=tinysrgb&w=1920)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }
+        }}
+      >
+        <Container maxWidth="md" sx={{ position: 'relative', textAlign: 'center', color: 'white' }}>
+          <Typography 
+            variant="h2" 
+            component="h1" 
+            gutterBottom 
+            sx={{ 
+              fontWeight: 'bold',
+              fontFamily: "'Permanent Marker', cursive",
+              color: '#000000',
+              textShadow: '2px 2px 4px rgba(255,255,255,0.3)',
+              letterSpacing: '2px',
+              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' }
+            }}
+          >
+            Discover the World of Photography
+          </Typography>
+          <Typography 
+            variant="h5" 
+            gutterBottom 
+            sx={{ 
+              mb: 4,
+              fontFamily: "'Permanent Marker', cursive",
+              color: '#000000',
+              textShadow: '2px 2px 4px rgba(255,255,255,0.3)',
+              letterSpacing: '1px'
+            }}
+          >
+            Every photograph tells a story. What story will you tell?
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => setShowGallery(true)}
+            sx={{
+              color: '#000000',
+              fontSize: '1.5rem',
+              fontFamily: "'Permanent Marker', cursive",
+              textTransform: 'none',
+              border: 'none',
+              background: 'none',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+                background: 'none',
+              }
+            }}
+          >
+            Start Journey
+          </Button>
+        </Container>
+        <IconButton
+          sx={{
+            position: 'absolute',
+            bottom: 20,
+            color: 'white',
+            animation: 'bounce 2s infinite'
           }}
+          onClick={() => setShowGallery(true)}
         >
-          <Typography
-            variant="h2"
-            component="h1"
-            sx={{
-              color: 'black',
-              fontWeight: 900,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-              mb: 3
-            }}
-          >
-            Welcome to Galerija
-          </Typography>
-          <Typography
-            variant="h5"
-            sx={{
-              color: 'black',
-              fontWeight: 700,
-              mb: 4
-            }}
-          >
-            Discover and share beautiful moments through photography
-          </Typography>
-        </Box>
+          <KeyboardArrowDown sx={{ fontSize: 40 }} />
+        </IconButton>
+      </Box>
 
-        <Grid container spacing={4}>
-          {!loading && images.map((image) => (
-            <Grid item xs={12} sm={6} md={4} key={image.id}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  transform: 'perspective(1000px)',
-                  transition: 'transform 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'perspective(1000px) rotateY(5deg)',
-                    '& .image-overlay': {
-                      opacity: 1
-                    }
-                  },
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="260"
-                  image={image.webformatURL}
-                  alt={image.tags}
-                  sx={{ 
-                    objectFit: 'cover',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => handleImageClick(image)}
-                />
-                <Box
-                  className="image-overlay"
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    bgcolor: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white',
-                    p: 2,
-                    opacity: 0,
-                    transition: 'opacity 0.3s ease-in-out'
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                      {image.tags}
-                    </Typography>
-                    <Box>
-                      <IconButton 
-                        size="small" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(image.id);
-                        }}
-                        sx={{ color: 'white' }}
-                      >
-                        {likes[image.id] ? <Favorite color="error" /> : <FavoriteBorder />}
-                      </IconButton>
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFavorite(image);
-                        }}
-                        sx={{ color: 'white' }}
-                      >
+      {/* Gallery Section */}
+      {showGallery && (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Grid container spacing={3}>
+            {images.map((image) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
+                <Card>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={image.webformatURL}
+                    alt={image.tags}
+                    onClick={() => handleImageClick(image)}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box>
+                        <IconButton onClick={() => handleLike(image.id)}>
+                          {likes[image.id] ? <Favorite color="error" /> : <FavoriteBorder />}
+                        </IconButton>
+                        <IconButton onClick={() => handleImageClick(image)}>
+                          <Comment />
+                        </IconButton>
+                      </Box>
+                      <IconButton onClick={() => handleFavorite(image.id)}>
                         {favorites[image.id] ? <Bookmark color="primary" /> : <BookmarkBorder />}
                       </IconButton>
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleImageClick(image);
-                        }}
-                        sx={{ color: 'white' }}
-                      >
-                        <Comment />
-                      </IconButton>
                     </Box>
-                  </Box>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                    by {image.user}
-                  </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      )}
+
+      {/* Image Modal */}
+      <Modal
+        open={!!selectedImage}
+        onClose={handleCloseModal}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Paper sx={{ maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto', p: 2 }}>
+          {selectedImage && (
+            <>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <IconButton onClick={handleCloseModal}>
+                  <Close />
+                </IconButton>
+              </Box>
+              <img
+                src={selectedImage.webformatURL}
+                alt={selectedImage.tags}
+                style={{ width: '100%', height: 'auto' }}
+              />
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6">Comments</Typography>
+                <List>
+                  {(comments[selectedImage.id] || []).map((comment, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem>
+                        <ListItemAvatar>
+                          <Avatar>{comment.user[0]}</Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={comment.text}
+                          secondary={new Date(comment.timestamp).toLocaleString()}
+                        />
+                      </ListItem>
+                      <Divider component="li" />
+                    </React.Fragment>
+                  ))}
+                </List>
+                <Box sx={{ display: 'flex', mt: 2 }}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Add a comment..."
+                    value={comment}
+                    onChange={handleCommentChange}
+                  />
+                  <IconButton onClick={() => handleCommentSubmit(selectedImage.id)}>
+                    <Send />
+                  </IconButton>
                 </Box>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+              </Box>
+            </>
+          )}
+        </Paper>
+      </Modal>
 
-        <Modal
-          open={!!selectedImage}
-          onClose={handleCloseModal}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: 2
-          }}
-        >
-          <Box
-            sx={{
-              position: 'relative',
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              boxShadow: 24,
-              p: 2,
-              maxWidth: '90vw',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}
-          >
-            <IconButton
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                bgcolor: 'rgba(0,0,0,0.4)',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'rgba(0,0,0,0.6)'
-                }
-              }}
-              onClick={handleCloseModal}
-            >
-              <Close />
-            </IconButton>
-            
-            {selectedImage && (
-              <>
-                <img
-                  src={selectedImage.largeImageURL || selectedImage.webformatURL}
-                  alt={selectedImage.tags}
-                  style={{
-                    width: '100%',
-                    maxHeight: '70vh',
-                    objectFit: 'contain'
-                  }}
-                />
-                
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Comments
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Add a comment..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleCommentSubmit(selectedImage.id);
-                        }
-                      }}
-                    />
-                    <IconButton 
-                      color="primary"
-                      onClick={() => handleCommentSubmit(selectedImage.id)}
-                    >
-                      <Send />
-                    </IconButton>
-                  </Box>
-
-                  <List>
-                    {comments[selectedImage.id]?.map((comment, index) => (
-                      <React.Fragment key={index}>
-                        <ListItem alignItems="flex-start">
-                          <ListItemAvatar>
-                            <Avatar>{comment.author[0]}</Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={comment.author}
-                            secondary={
-                              <>
-                                <Typography
-                                  component="span"
-                                  variant="body2"
-                                  color="text.primary"
-                                >
-                                  {comment.text}
-                                </Typography>
-                                {" — " + new Date(comment.timestamp).toLocaleString()}
-                              </>
-                            }
-                          />
-                        </ListItem>
-                        {index < (comments[selectedImage.id].length - 1) && <Divider variant="inset" component="li" />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                </Box>
-              </>
-            )}
-          </Box>
-        </Modal>
-
-        <Snackbar 
-          open={snackbar.open} 
-          autoHideDuration={3000} 
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        >
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

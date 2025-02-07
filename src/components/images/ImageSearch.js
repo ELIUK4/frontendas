@@ -99,11 +99,20 @@ const ImageSearch = ({ isAuthenticated }) => {
     setDialogOpen(true);
   };
 
+  const handleLike = async (imageId) => {
+    try {
+      await imageApi.likeImage(imageId);
+      setImages(images.map(image => image.id === imageId ? { ...image, likes: image.likes + 1 } : image));
+    } catch (error) {
+      console.error('Failed to like image:', error);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Search Images"
@@ -112,7 +121,7 @@ const ImageSearch = ({ isAuthenticated }) => {
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
               <Select
@@ -129,13 +138,18 @@ const ImageSearch = ({ isAuthenticated }) => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} sm={2}>
             <Button
               fullWidth
               variant="contained"
               onClick={handleSearch}
               disabled={loading}
-              sx={{ height: '56px' }}
+              sx={{
+                backgroundColor: '#000000',
+                '&:hover': {
+                  backgroundColor: '#333333',
+                },
+              }}
             >
               Search
             </Button>
@@ -145,40 +159,54 @@ const ImageSearch = ({ isAuthenticated }) => {
 
       <Grid container spacing={3}>
         {images.map((image) => (
-          <Grid item key={image.id} xs={12} sm={6} md={4}>
-            <Card>
+          <Grid item xs={12} sm={6} md={4} key={image.id}>
+            <Card 
+              sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                  transition: 'all 0.3s ease'
+                }
+              }}
+            >
               <CardMedia
                 component="img"
                 height="200"
                 image={image.webformatURL}
                 alt={image.tags}
-                sx={{ 
-                  objectFit: 'cover',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    opacity: 0.8,
-                  }
-                }}
                 onClick={() => handleImageClick(image)}
+                sx={{ cursor: 'pointer', objectFit: 'cover' }}
               />
-              <CardContent>
+              <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="body2" color="text.secondary">
                   {image.tags}
                 </Typography>
-                <Typography variant="caption" display="block">
-                  By {image.user}
-                </Typography>
               </CardContent>
               <CardActions disableSpacing>
-                <IconButton
+                <IconButton 
                   onClick={() => toggleFavorite(image.id, image)}
-                  color={favorites.includes(image.id) ? 'primary' : 'default'}
+                  sx={{
+                    color: favorites.includes(image.id) ? '#ff3d3d' : 'inherit',
+                    '&:hover': {
+                      color: favorites.includes(image.id) ? '#ff1111' : '#ff3d3d'
+                    }
+                  }}
                 >
-                  {favorites.includes(image.id) ? <Favorite /> : <FavoriteBorder />}
+                  {favorites.includes(image.id) ? (
+                    <Favorite />
+                  ) : (
+                    <FavoriteBorder />
+                  )}
                 </IconButton>
-                <Typography variant="body2" color="text.secondary">
-                  {image.likes} likes
-                </Typography>
+                <IconButton onClick={() => handleLike(image.id)}>
+                  <Typography variant="body2" color="text.secondary">
+                    {image.likes} likes
+                  </Typography>
+                </IconButton>
               </CardActions>
             </Card>
           </Grid>
@@ -189,9 +217,6 @@ const ImageSearch = ({ isAuthenticated }) => {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         image={selectedImage}
-        isAuthenticated={isAuthenticated}
-        isFavorite={selectedImage ? favorites.includes(selectedImage.id) : false}
-        onFavoriteToggle={(imageId, image) => toggleFavorite(imageId, image)}
       />
     </Container>
   );

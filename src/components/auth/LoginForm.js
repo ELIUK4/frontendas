@@ -36,7 +36,7 @@ const LoginForm = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -53,37 +53,64 @@ const LoginForm = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          mt: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundImage: 'url(https://images.pexels.com/photos/1787235/pexels-photo-1787235.jpeg?auto=compress&cs=tinysrgb&w=1920)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }
+      }}
+    >
+      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
         <Paper
-          elevation={3}
+          elevation={24}
           sx={{
             p: 4,
             width: '100%',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
             borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           }}
         >
           <Typography
             component="h1"
-            variant="h4"
+            variant="h3"
             align="center"
             sx={{
-              mb: 3,
-              fontWeight: 600,
-              color: 'primary.main',
+              mb: 4,
+              fontWeight: 700,
+              color: '#1a1a1a',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
             }}
           >
             Sign In
           </Typography>
+
+          {error && (
+            <Typography
+              color="error"
+              variant="body2"
+              align="center"
+              sx={{ mb: 2 }}
+            >
+              {error}
+            </Typography>
+          )}
 
           <form onSubmit={handleSubmit}>
             <TextField
@@ -101,10 +128,8 @@ const LoginForm = () => {
               disabled={loading}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: 'primary.main',
-                  },
-                },
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                }
               }}
             />
             <TextField
@@ -119,30 +144,25 @@ const LoginForm = () => {
               value={formData.password}
               onChange={handleChange}
               error={!!error}
-              helperText={error}
               disabled={loading}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                }
+              }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
-                      disabled={loading}
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: 'primary.main',
-                  },
-                },
-              }}
             />
-
             <Button
               type="submit"
               fullWidth
@@ -152,31 +172,36 @@ const LoginForm = () => {
                 mt: 3,
                 mb: 2,
                 py: 1.5,
-                fontSize: '1rem',
+                fontSize: '1.1rem',
                 fontWeight: 600,
-                textTransform: 'none',
-                borderRadius: 2,
+                backgroundColor: '#1a1a1a',
+                '&:hover': {
+                  backgroundColor: '#333',
+                },
               }}
-              startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                <>
+                  <LoginIcon sx={{ mr: 1 }} />
+                  Sign In
+                </>
+              )}
             </Button>
-
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 Don't have an account?{' '}
                 <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() => navigate('/register')}
+                  href="/register"
                   sx={{
-                    color: 'primary.main',
+                    color: '#1a1a1a',
                     textDecoration: 'none',
+                    fontWeight: 600,
                     '&:hover': {
                       textDecoration: 'underline',
                     },
                   }}
-                  disabled={loading}
                 >
                   Sign Up
                 </Link>
@@ -184,8 +209,8 @@ const LoginForm = () => {
             </Box>
           </form>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

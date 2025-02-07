@@ -15,9 +15,6 @@ axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log('Adding token to request:', config.url);
-  } else {
-    console.log('No token found for request:', config.url);
   }
   return config;
 }, (error) => {
@@ -26,12 +23,8 @@ axiosInstance.interceptors.request.use((config) => {
 
 // Handle response errors
 axiosInstance.interceptors.response.use(
-  (response) => {
-    console.log('Response from:', response.config.url, response.status);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('API Error:', error.config.url, error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
@@ -56,9 +49,8 @@ export const authApi = {
 export const imageApi = {
   search: (query, params = {}) =>
     axiosInstance.get('/images/search', { params: { query, ...params } }),
-  getComments: (imageId) => axiosInstance.get(`/comments/${imageId}`),
-  addComment: (imageId, content) => axiosInstance.post(`/comments/${imageId}`, { content }),
-  deleteComment: (commentId) => axiosInstance.delete(`/comments/${commentId}`),
+  likeImage: (imageId) =>
+    axiosInstance.post(`/images/${imageId}/like`),
 };
 
 // Categories API
@@ -74,12 +66,12 @@ export const searchHistoryApi = {
 
 // Favorites API
 export const favoriteApi = {
-  addToFavorites: (pixabayId, { params }) => 
-    axiosInstance.post(`/favorites/${pixabayId}`, params),
-  removeFromFavorites: (pixabayId) =>
-    axiosInstance.delete(`/favorites/${pixabayId}`),
-  checkFavorite: (pixabayId) =>
-    axiosInstance.get(`/favorites/check/${pixabayId}`),
+  addFavorite: (imageId) => 
+    axiosInstance.post(`/favorites/${imageId}`),
+  removeFavorite: (imageId) =>
+    axiosInstance.delete(`/favorites/${imageId}`),
+  checkFavorite: (imageId) =>
+    axiosInstance.get(`/favorites/check/${imageId}`),
   getUserFavorites: (page = 0, size = 20) =>
     axiosInstance.get(`/favorites?page=${page}&size=${size}`)
 };

@@ -35,11 +35,12 @@ const Navbar = () => {
 
   return (
     <AppBar 
-      position="static" 
+      position="fixed" 
       sx={{ 
-        background: 'rgba(211, 47, 47, 0.95)', // Raudona su permatomumu
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)'
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
       }}
     >
       <Container maxWidth="lg">
@@ -52,17 +53,18 @@ const Navbar = () => {
             }}
             onClick={() => navigate('/')}
           >
-            <GalleryIcon sx={{ mr: 1, color: 'white' }} />
+            <GalleryIcon sx={{ mr: 1, color: '#000000' }} />
             <Typography
               variant="h6"
               component="div"
               sx={{ 
-                color: 'white',
+                color: '#000000',
                 fontWeight: 600,
-                letterSpacing: '0.5px'
+                letterSpacing: '0.5px',
+                fontFamily: "'Permanent Marker', cursive",
               }}
             >
-              Galerija
+              Gallery
             </Typography>
           </Box>
 
@@ -71,58 +73,44 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               <IconButton 
-                color="inherit" 
                 onClick={() => navigate('/search')}
                 sx={{ 
-                  color: 'white',
+                  color: '#000000',
                   '&:hover': { 
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
                 <SearchIcon />
               </IconButton>
               <IconButton 
-                color="inherit" 
                 onClick={() => navigate('/favorites')}
                 sx={{ 
-                  color: 'white',
+                  color: '#000000',
                   '&:hover': { 
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
                 <FavoriteIcon />
               </IconButton>
               <IconButton 
-                color="inherit" 
                 onClick={() => navigate('/history')}
                 sx={{ 
-                  color: 'white',
+                  color: '#000000',
                   '&:hover': { 
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
                 <HistoryIcon />
               </IconButton>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  mx: 2,
-                  color: 'white',
-                  fontWeight: 500
-                }}
-              >
-                {user.username}
-              </Typography>
-              <IconButton 
-                color="inherit" 
+              <IconButton
                 onClick={handleLogout}
                 sx={{ 
-                  color: 'white',
+                  color: '#000000',
                   '&:hover': { 
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
@@ -132,34 +120,34 @@ const Navbar = () => {
           ) : (
             <>
               <Button
-                variant="contained"
                 startIcon={<LoginIcon />}
                 onClick={() => navigate('/login')}
-                sx={{ 
-                  backgroundColor: 'white',
-                  color: '#d32f2f',
-                  mr: 1,
+                sx={{
+                  color: '#000000',
+                  textTransform: 'none',
+                  fontFamily: "'Permanent Marker', cursive",
+                  fontSize: '1rem',
                   '&:hover': { 
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
-                Login
+                Sign In
               </Button>
               <Button
-                variant="outlined"
                 startIcon={<RegisterIcon />}
                 onClick={() => navigate('/register')}
-                sx={{ 
-                  color: 'white',
-                  borderColor: 'white',
+                sx={{
+                  color: '#000000',
+                  textTransform: 'none',
+                  fontFamily: "'Permanent Marker', cursive",
+                  fontSize: '1rem',
                   '&:hover': { 
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)' 
                   }
                 }}
               >
-                Register
+                Sign Up
               </Button>
             </>
           )}
