@@ -108,11 +108,7 @@ const App = () => {
               />
               <Route
                 path="/search"
-                element={
-                  <PrivateRoute>
-                    <ImageSearch isAuthenticated={isAuthenticated} />
-                  </PrivateRoute>
-                }
+                element={<ImageSearch isAuthenticated={isAuthenticated} />}
               />
               <Route
                 path="/favorites"

@@ -4,17 +4,46 @@ import { jwtDecode } from 'jwt-decode';
 
 const initialState = {
   user: null,
-  token: null,
-  isAuthenticated: false,
+  token: localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null,
 };
+
+// Check if token exists and is valid on app load
+const validateToken = () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        localStorage.removeItem('token');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      localStorage.removeItem('token');
+      return false;
+    }
+  }
+  return false;
+};
+
+// Initialize auth state with token validation
+if (!validateToken()) {
+  initialState.token = null;
+  initialState.isAuthenticated = false;
+}
 
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials) => {
     const response = await authApi.login(credentials.username, credentials.password);
-    const { token } = response.data;
+    const token = response.headers?.authorization?.replace('Bearer ', '') || response.data.token;
+    if (!token) {
+      throw new Error('No token received');
+    }
     localStorage.setItem('token', token);
     return { token };
   }

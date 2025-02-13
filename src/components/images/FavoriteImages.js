@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { imageApi } from '../../services/api';
+import { favoriteApi } from '../../services/api';
 import {
   Container,
   Grid,
@@ -24,8 +24,8 @@ const FavoriteImages = () => {
 
   const loadFavorites = async () => {
     try {
-      const response = await imageApi.getFavorites();
-      setFavorites(response.data.content);
+      const response = await favoriteApi.getUserFavorites();
+      setFavorites(response.data.content || []);
     } catch (error) {
       console.error('Failed to load favorites:', error);
     } finally {
@@ -35,7 +35,7 @@ const FavoriteImages = () => {
 
   const removeFavorite = async (imageId) => {
     try {
-      await imageApi.removeFromFavorites(imageId);
+      await favoriteApi.removeFromFavorites(imageId);
       setFavorites(favorites.filter(fav => fav.image.id !== imageId));
     } catch (error) {
       console.error('Failed to remove favorite:', error);

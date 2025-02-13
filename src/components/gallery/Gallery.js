@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { imageApi, favoriteApi } from '../../services/api';
 import {
   Box,
-  TextField,
-  Button,
   Grid,
   Card,
   CardMedia,
@@ -15,22 +13,9 @@ import {
 } from '@mui/material';
 import { Favorite, FavoriteBorder, Comment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import ImageDialog from './ImageDialog';
+import ImageDialog from '../images/ImageDialog';
 
-const WelcomeHeader = () => (
-  <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-    <Typography variant="h2" component="h1" gutterBottom>
-      Welcome to Photo Gallery
-    </Typography>
-    <Typography variant="h5" color="text.secondary" paragraph>
-      Discover amazing photography from around the world. Browse our collection of high-quality images,
-      save your favorites, and join our community of photography enthusiasts.
-    </Typography>
-  </Container>
-);
-
-const ImageSearch = ({ isAuthenticated }) => {
-  const [query, setQuery] = useState('');
+const Gallery = ({ isAuthenticated }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState([]);
@@ -39,11 +24,31 @@ const ImageSearch = ({ isAuthenticated }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    handleSearch();
+    loadRandomImages();
     if (isAuthenticated) {
       loadFavorites();
     }
   }, [isAuthenticated]);
+
+  const loadRandomImages = () => {
+    setLoading(true);
+    const categories = ['nature', 'city', 'technology', 'people', 'animals'];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    
+    imageApi.search(randomCategory)
+      .then(response => {
+        if (response.data && response.data.hits) {
+          setImages(response.data.hits);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch images:', error);
+        setImages([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const loadFavorites = async () => {
     try {
@@ -54,23 +59,6 @@ const ImageSearch = ({ isAuthenticated }) => {
       console.error('Failed to load favorites:', error);
       setFavorites([]);
     }
-  };
-
-  const handleSearch = () => {
-    setLoading(true);
-    imageApi.search(query)
-      .then(response => {
-        if (response.data && response.data.hits) {
-          setImages(response.data.hits);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to search images:', error);
-        setImages([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
   };
 
   const toggleFavorite = async (imageId, image) => {
@@ -127,32 +115,25 @@ const ImageSearch = ({ isAuthenticated }) => {
 
   return (
     <Box>
-      <WelcomeHeader />
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={9}>
-              <TextField
-                fullWidth
-                label="Search Images"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleSearch}
-                disabled={loading}
-              >
-                Search
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
-
+      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
+        <Typography variant="h2" component="h1" gutterBottom>
+          Photography – The Magic of a Moment
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Photography is more than just an image. It is a moment frozen in time, an emotion preserved forever. 
+          Every photograph tells its own story—sometimes joyful, sometimes melancholic, and sometimes mesmerizing with mystery.
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Light and shadows dance like a painter's brushstrokes, colors breathe life, and details reveal the beauty 
+          of the world as seen through the heart. A single press of a button can capture a smile, a clear sky, 
+          the last rays of a sunset, or eyes that hold an entire universe.
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Photography is an art form that allows us to return to the past and relive our most treasured moments. 
+          It connects the past, present, and future because what was once fleeting becomes eternal.
+        </Typography>
+      </Container>
+      <Container maxWidth="xl">
         <Grid container spacing={3}>
           {images.map((image) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
@@ -197,9 +178,9 @@ const ImageSearch = ({ isAuthenticated }) => {
           isFavorite={selectedImage ? favorites.includes(selectedImage.id) : false}
           onFavoriteToggle={(image) => toggleFavorite(image.id, image)}
         />
-      </Box>
+      </Container>
     </Box>
   );
 };
 
-export default ImageSearch;
+export default Gallery;

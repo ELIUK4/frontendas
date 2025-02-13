@@ -21,14 +21,44 @@ import { imageApi } from '../../services/api';
 const ImageDialog = ({ open, onClose, image, isAuthenticated, isFavorite, onFavoriteToggle }) => {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState(image?.comments || []);
+  const [showFullSize, setShowFullSize] = useState(false);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!comment.trim() || !isAuthenticated) return;
 
     try {
-      const response = await imageApi.addComment(image.id, comment);
-      setComments([...comments, response.data]);
+      // First save the image to get its database ID
+      const imageData = {
+        webformatURL: image.webformatURL,
+        previewURL: image.previewURL || image.webformatURL,
+        pageURL: image.pageURL,
+        tags: image.tags,
+        type: image.type || 'photo',
+        userId: image.user_id?.toString() || '0',
+        largeImageURL: image.largeImageURL,
+        fullHDURL: image.fullHDURL,
+        imageURL: image.imageURL,
+        imageWidth: image.imageWidth,
+        imageHeight: image.imageHeight,
+        imageSize: image.imageSize,
+        views: image.views,
+        downloads: image.downloads,
+        likes: image.likes,
+        webformatWidth: image.webformatWidth,
+        webformatHeight: image.webformatHeight,
+        previewWidth: image.previewWidth,
+        previewHeight: image.previewHeight
+      };
+
+      const imageResponse = await imageApi.saveExternal(imageData);
+
+      // Get the saved image ID from the response
+      const savedImageId = imageResponse.data.id;
+
+      // Now add the comment using the saved image ID
+      const commentResponse = await imageApi.addComment(savedImageId, comment);
+      setComments([...comments, commentResponse.data]);
       setComment('');
     } catch (error) {
       console.error('Failed to add comment:', error);
@@ -49,10 +79,47 @@ const ImageDialog = ({ open, onClose, image, isAuthenticated, isFavorite, onFavo
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Full size image dialog */}
+          <Dialog
+            open={showFullSize}
+            onClose={() => setShowFullSize(false)}
+            maxWidth={false}
+            fullWidth
+            PaperProps={{
+              sx: {
+                width: '95vw',
+                height: '95vh',
+                maxWidth: 'none',
+                m: 0
+              }
+            }}
+          >
+            <DialogContent sx={{ p: 0, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img
+                src={image.fullscreenImageURL || image.largeImageURL || image.webformatURL}
+                alt={image.tags}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%', 
+                  objectFit: 'contain',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setShowFullSize(false)}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Thumbnail image */}
           <img
-            src={image.largeImageURL || image.webformatURL}
+            src={image.webformatURL}
             alt={image.tags}
-            style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+            style={{ 
+              width: '100%', 
+              maxHeight: '70vh', 
+              objectFit: 'contain',
+              cursor: 'pointer' 
+            }}
+            onClick={() => setShowFullSize(true)}
           />
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

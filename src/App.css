@@ -1,3 +1,9 @@
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
 .App {
   text-align: center;
 }
@@ -35,4 +41,122 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.search-container {
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 800px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.image-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  background-color: white;
+}
+
+.image-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.image-card-content {
+  padding: 1rem;
+}
+
+.image-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.favorite-button {
+  color: #ff3d3d;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.favorite-button:hover {
+  color: #ff1111;
+}
+
+.search-form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.search-button {
+  padding: 0.5rem 1.5rem;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+  background-color: #333;
+}
+
+.dialog-content {
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.dialog-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.dialog-actions {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 0.25rem;
+}
+
+.dialog-close:hover {
+  background-color: rgba(0, 0, 0, 0.7);
 }
