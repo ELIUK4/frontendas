@@ -9,10 +9,21 @@ import {
   Box,
   IconButton,
 } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Delete } from '@mui/icons-material';
+import { imageApi } from '../../services/api';
 
-const ImageDialog = ({ open, onClose, image }) => {
+const ImageDialog = ({ open, onClose, image, isAuthenticated }) => {
   if (!image) return null;
+
+  const handleDelete = async () => {
+    try {
+      await imageApi.deleteImage(image.id);
+      onClose();
+      window.location.reload(); // Atnaujinti puslapį po ištrynimo
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -40,6 +51,15 @@ const ImageDialog = ({ open, onClose, image }) => {
         </Box>
       </DialogContent>
       <DialogActions>
+        {isAuthenticated && (
+          <Button 
+            onClick={handleDelete} 
+            color="error" 
+            startIcon={<Delete />}
+          >
+            Delete
+          </Button>
+        )}
         <Button onClick={onClose} color="primary">
           Close
         </Button>

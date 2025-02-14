@@ -59,29 +59,19 @@ const LoginForm = () => {
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        }
+        justifyContent: 'center'
       }}
     >
-      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="sm">
         <Paper
-          elevation={24}
+          elevation={3}
           sx={{
-            p: 4,
+            p: { xs: 3, sm: 4 },
             width: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(10px)',
             borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}
         >
           <Typography
@@ -91,8 +81,7 @@ const LoginForm = () => {
             sx={{
               mb: 4,
               fontWeight: 700,
-              color: '#1a1a1a',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+              color: '#6366f1'
             }}
           >
             Sign In
@@ -109,7 +98,7 @@ const LoginForm = () => {
             </Typography>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <Box component="form" onSubmit={handleSubmit}>
             <TextField
               margin="normal"
               required
@@ -125,7 +114,12 @@ const LoginForm = () => {
               disabled={loading}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1'
+                  }
                 }
               }}
             />
@@ -144,7 +138,12 @@ const LoginForm = () => {
               disabled={loading}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1'
+                  }
                 }
               }}
               InputProps={{
@@ -171,10 +170,10 @@ const LoginForm = () => {
                 py: 1.5,
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#6366f1',
                 '&:hover': {
-                  backgroundColor: '#333',
-                },
+                  backgroundColor: '#4f46e5'
+                }
               }}
             >
               {loading ? (
@@ -187,24 +186,24 @@ const LoginForm = () => {
               )}
             </Button>
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.6)' }}>
                 Don't have an account?{' '}
                 <Link
                   href="/register"
                   sx={{
-                    color: '#1a1a1a',
+                    color: '#6366f1',
                     textDecoration: 'none',
                     fontWeight: 600,
                     '&:hover': {
-                      textDecoration: 'underline',
-                    },
+                      textDecoration: 'underline'
+                    }
                   }}
                 >
                   Sign Up
                 </Link>
               </Typography>
             </Box>
-          </form>
+          </Box>
         </Paper>
       </Container>
     </Box>

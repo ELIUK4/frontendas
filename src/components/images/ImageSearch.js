@@ -14,7 +14,7 @@ import {
   IconButton,
   Container,
 } from '@mui/material';
-import { Favorite, FavoriteBorder, Comment, CloudUpload } from '@mui/icons-material';
+import { Favorite, FavoriteBorder, Comment, CloudUpload, Delete } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ImageDialog from './ImageDialog';
 import UploadDialog from './UploadDialog';
@@ -159,6 +159,26 @@ const ImageSearch = ({ isAuthenticated }) => {
     setSelectedImage(null);
   };
 
+  const handleDelete = async (imageId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/images/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete image');
+      }
+
+      // Remove image from state
+      setImages(images.filter(img => img.id !== imageId));
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  };
+
   return (
     <Box>
       <WelcomeHeader />
@@ -241,13 +261,23 @@ const ImageSearch = ({ isAuthenticated }) => {
                       {image.tags}
                     </Typography>
                   </CardContent>
-                  <CardActions>
-                    <IconButton 
-                      onClick={() => toggleFavorite(image.id, image)}
-                      color="primary"
-                    >
-                      {favorites.includes(image.id) ? <Favorite /> : <FavoriteBorder />}
-                    </IconButton>
+                  <CardActions sx={{ justifyContent: 'space-between', padding: '8px 16px' }}>
+                    <Box>
+                      <IconButton 
+                        onClick={() => toggleFavorite(image.id, image)}
+                        color="primary"
+                      >
+                        {favorites.includes(image.id) ? <Favorite /> : <FavoriteBorder />}
+                      </IconButton>
+                      {image.user_id === localStorage.getItem('username') && (
+                        <IconButton 
+                          onClick={() => handleDelete(image.id)}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      )}
+                    </Box>
                     <IconButton
                       onClick={() => handleImageClick(image)}
                       color="primary"

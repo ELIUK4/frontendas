@@ -57,32 +57,19 @@ const RegisterForm = () => {
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundImage: 'url(https://images.pexels.com/photos/1787235/pexels-photo-1787235.jpeg?auto=compress&cs=tinysrgb&w=1920)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        }
+        justifyContent: 'center'
       }}
     >
-      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="sm">
         <Paper
-          elevation={24}
+          elevation={3}
           sx={{
-            p: 4,
+            p: { xs: 3, sm: 4 },
             width: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(10px)',
             borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}
         >
           <Typography
@@ -92,8 +79,7 @@ const RegisterForm = () => {
             sx={{
               mb: 4,
               fontWeight: 700,
-              color: '#1a1a1a',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+              color: '#6366f1'
             }}
           >
             Sign Up
@@ -121,7 +107,12 @@ const RegisterForm = () => {
               autoFocus
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1'
+                  }
                 }
               }}
             />
@@ -135,7 +126,12 @@ const RegisterForm = () => {
               onChange={(e) => setEmail(e.target.value)}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1'
+                  }
                 }
               }}
             />
@@ -149,7 +145,12 @@ const RegisterForm = () => {
               onChange={(e) => setPassword(e.target.value)}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover fieldset': {
+                    borderColor: '#6366f1'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1'
+                  }
                 }
               }}
               InputProps={{
@@ -176,10 +177,10 @@ const RegisterForm = () => {
                 py: 1.5,
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#6366f1',
                 '&:hover': {
-                  backgroundColor: '#333',
-                },
+                  backgroundColor: '#4f46e5'
+                }
               }}
             >
               {loading ? (
@@ -192,17 +193,17 @@ const RegisterForm = () => {
               )}
             </Button>
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.6)' }}>
                 Already have an account?{' '}
                 <Link
                   href="/login"
                   sx={{
-                    color: '#1a1a1a',
+                    color: '#6366f1',
                     textDecoration: 'none',
                     fontWeight: 600,
                     '&:hover': {
-                      textDecoration: 'underline',
-                    },
+                      textDecoration: 'underline'
+                    }
                   }}
                 >
                   Sign In

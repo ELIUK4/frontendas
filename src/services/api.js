@@ -104,7 +104,8 @@ export const imageApi = {
       'Accept': 'application/json'
     }
   }),
-  getUserImages: () => axiosInstance.get('/images/user')
+  getUserImages: () => axiosInstance.get('/images/user'),
+  deleteImage: (imageId) => axiosInstance.delete(`/images/${imageId}`)
 };
 
 // Categories API

@@ -149,9 +149,9 @@ const Gallery = ({ isAuthenticated }) => {
       // Jei tai yra įkelta nuotrauka
       const uploadedImage = {
         ...image,
-        webformatURL: `/uploads/${image.fileName}`,
-        largeImageURL: `/uploads/${image.fileName}`,
-        previewURL: `/uploads/${image.fileName}`,
+        webformatURL: `/api/images/uploads/${image.fileName}`,
+        largeImageURL: `/api/images/uploads/${image.fileName}`,
+        previewURL: `/api/images/uploads/${image.fileName}`,
         type: 'photo',
         tags: image.tags || '',
         user_id: '0'
