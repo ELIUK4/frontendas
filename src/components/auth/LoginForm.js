@@ -60,9 +60,6 @@ const LoginForm = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: 'url(https://images.pexels.com/photos/1787235/pexels-photo-1787235.jpeg?auto=compress&cs=tinysrgb&w=1920)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         position: 'relative',
         '&::before': {
           content: '""',

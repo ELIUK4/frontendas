@@ -64,10 +64,19 @@ export const authApi = {
 
 // Images API
 export const imageApi = {
-  search: (query) => {
-    const apiKey = '48247705-1f17db8e4da96243d471ac295';
-    const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(query || 'camera')}&image_type=photo&safesearch=true&per_page=20`;
-    return axios.get(url);
+  search: async (query) => {
+    try {
+      const apiKey = '48247705-1f17db8e4da96243d471ac295';
+      const encodedQuery = encodeURIComponent(query || 'camera');
+      const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&safesearch=true&per_page=20`;
+      console.log('Searching with URL:', url);
+      const response = await axios.get(url);
+      console.log('Pixabay response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('Pixabay API error:', error);
+      throw error;
+    }
   },
   saveExternal: (imageData) => {
     console.log('Saving external image:', imageData);
@@ -89,17 +98,18 @@ export const imageApi = {
     axiosInstance.post(`/images/${imageId}/like`),
   addComment: (imageId, comment) =>
     axiosInstance.post(`/images/${imageId}/comments`, { comment }),
+  uploadImage: (formData) => axiosInstance.post('/images/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Accept': 'application/json'
+    }
+  }),
+  getUserImages: () => axiosInstance.get('/images/user')
 };
 
 // Categories API
 export const categoryApi = {
   getAll: () => axiosInstance.get('/categories'),
-};
-
-// Search History API
-export const searchHistoryApi = {
-  getHistory: () => axiosInstance.get('/search-history'),
-  clearHistory: () => axiosInstance.delete('/search-history'),
 };
 
 // Favorites API

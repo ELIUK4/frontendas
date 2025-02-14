@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { imageApi, favoriteApi } from '../../services/api';
+import searchHistoryApi from '../../api/searchHistoryApi';
 import {
   Box,
   TextField,
@@ -13,9 +14,10 @@ import {
   IconButton,
   Container,
 } from '@mui/material';
-import { Favorite, FavoriteBorder, Comment } from '@mui/icons-material';
+import { Favorite, FavoriteBorder, Comment, CloudUpload } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ImageDialog from './ImageDialog';
+import UploadDialog from './UploadDialog';
 
 const WelcomeHeader = () => (
   <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
@@ -36,10 +38,13 @@ const ImageSearch = ({ isAuthenticated }) => {
   const [favorites, setFavorites] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    handleSearch();
+    // Load default images on mount
+    handleSearch('camera');
+
     if (isAuthenticated) {
       loadFavorites();
     }
@@ -56,21 +61,48 @@ const ImageSearch = ({ isAuthenticated }) => {
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = async (searchQuery) => {
+    const searchTerm = searchQuery || query;
+    if (!searchTerm) return;
+
     setLoading(true);
-    imageApi.search(query)
-      .then(response => {
-        if (response.data && response.data.hits) {
-          setImages(response.data.hits);
+    try {
+      const response = await imageApi.search(searchTerm);
+      const searchResults = response.data.hits.map(image => ({
+        id: image.id.toString(),
+        webformatURL: image.webformatURL,
+        largeImageURL: image.largeImageURL,
+        previewURL: image.previewURL || image.webformatURL,
+        type: 'photo',
+        tags: image.tags || '',
+        user_id: image.user_id || '0',
+        imageWidth: image.imageWidth,
+        imageHeight: image.imageHeight,
+        imageSize: image.imageSize,
+        views: image.views,
+        downloads: image.downloads,
+        likes: image.likes,
+        webformatWidth: image.webformatWidth,
+        webformatHeight: image.webformatHeight,
+        previewWidth: image.previewWidth,
+        previewHeight: image.previewHeight
+      }));
+      setImages(searchResults);
+
+      // Save search to history if user is authenticated
+      if (isAuthenticated && searchTerm !== 'camera') {
+        try {
+          await searchHistoryApi.saveSearch(searchTerm, response.data.hits.length);
+        } catch (error) {
+          console.error('Failed to save search to history:', error);
         }
-      })
-      .catch(error => {
-        console.error('Failed to search images:', error);
-        setImages([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error('Search failed:', error);
+      setImages([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleFavorite = async (imageId, image) => {
@@ -81,19 +113,17 @@ const ImageSearch = ({ isAuthenticated }) => {
     
     try {
       if (favorites.includes(imageId)) {
-        await favoriteApi.removeFromFavorites(imageId);
         setFavorites(favorites.filter(id => id !== imageId));
+        await favoriteApi.removeFromFavorites(imageId);
       } else {
         const imageData = {
           webformatURL: image.webformatURL,
-          pageURL: image.pageURL,
-          type: 'photo',
+          pageURL: image.pageURL || window.location.href,
+          type: image.type,
           tags: image.tags,
           previewURL: image.previewURL,
           largeImageURL: image.largeImageURL,
-          userId: image.user_id?.toString() || '0',
-          fullHDURL: image.fullHDURL,
-          imageURL: image.imageURL,
+          userId: image.user_id,
           imageWidth: image.imageWidth,
           imageHeight: image.imageHeight,
           imageSize: image.imageSize,
@@ -105,8 +135,12 @@ const ImageSearch = ({ isAuthenticated }) => {
           previewWidth: image.previewWidth,
           previewHeight: image.previewHeight
         };
+        
+        // Pirma išsaugome nuotrauką mūsų sistemoje
         const savedImage = await imageApi.saveExternal(imageData);
         const savedImageId = savedImage.data.id;
+        
+        // Tada pridedame į favoritus
         await favoriteApi.addToFavorites(savedImageId);
         setFavorites([...favorites, savedImageId]);
       }
@@ -128,76 +162,123 @@ const ImageSearch = ({ isAuthenticated }) => {
   return (
     <Box>
       <WelcomeHeader />
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={9}>
-              <TextField
-                fullWidth
-                label="Search Images"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleSearch}
-                disabled={loading}
-              >
-                Search
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
 
-        <Grid container spacing={3}>
-          {images.map((image) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={image.webformatURL}
-                  alt={image.tags}
-                  onClick={() => handleImageClick(image)}
-                  style={{ cursor: 'pointer', objectFit: 'cover' }}
+      <Container maxWidth="lg">
+        <Box sx={{ p: 3, backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 2 }}>
+          <Box sx={{ mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Search Images"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  sx={{
+                    backgroundColor: 'white',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    }
+                  }}
                 />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary">
-                    {image.tags}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <IconButton 
-                    onClick={() => toggleFavorite(image.id, image)}
-                    color="primary"
-                  >
-                    {favorites.includes(image.id) ? <Favorite /> : <FavoriteBorder />}
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleImageClick(image)}
-                    color="primary"
-                  >
-                    <Comment />
-                  </IconButton>
-                </CardActions>
-              </Card>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => handleSearch()}
+                  disabled={loading}
+                  sx={{
+                    height: '56px',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login');
+                      return;
+                    }
+                    setUploadDialogOpen(true);
+                  }}
+                  startIcon={<CloudUpload />}
+                  sx={{
+                    height: '56px',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  Upload
+                </Button>
+              </Grid>
             </Grid>
-          ))}
-        </Grid>
+          </Box>
 
-        <ImageDialog
-          open={dialogOpen}
-          onClose={handleDialogClose}
-          image={selectedImage}
-          isAuthenticated={isAuthenticated}
-          isFavorite={selectedImage ? favorites.includes(selectedImage.id) : false}
-          onFavoriteToggle={(image) => toggleFavorite(image.id, image)}
-        />
-      </Box>
+          <Grid container spacing={3}>
+            {images.map((image) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={image.webformatURL}
+                    alt={image.tags}
+                    sx={{ cursor: 'pointer', objectFit: 'cover' }}
+                    onClick={() => handleImageClick(image)}
+                  />
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {image.tags}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <IconButton 
+                      onClick={() => toggleFavorite(image.id, image)}
+                      color="primary"
+                    >
+                      {favorites.includes(image.id) ? <Favorite /> : <FavoriteBorder />}
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleImageClick(image)}
+                      color="primary"
+                    >
+                      <Comment />
+                    </IconButton>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <ImageDialog
+            open={dialogOpen}
+            onClose={handleDialogClose}
+            image={selectedImage}
+            isAuthenticated={isAuthenticated}
+            isFavorite={selectedImage ? favorites.includes(selectedImage.id) : false}
+            onFavoriteToggle={() => selectedImage && toggleFavorite(selectedImage.id, selectedImage)}
+          />
+
+          <UploadDialog
+            open={uploadDialogOpen}
+            onClose={() => setUploadDialogOpen(false)}
+            onUploadSuccess={() => {
+              setUploadDialogOpen(false);
+              handleSearch(query);
+            }}
+          />
+        </Box>
+      </Container>
     </Box>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { searchHistoryApi } from '../../services/api';
+import searchHistoryApi from '../../api/searchHistoryApi';
 import {
   Container,
   Typography,
@@ -32,8 +32,9 @@ const SearchHistory = () => {
 
   const loadHistory = async () => {
     try {
-      const response = await searchHistoryApi.getHistory();
-      setHistory(response.data.content);
+      const response = await searchHistoryApi.getUserSearchHistory();
+      console.log('Search history response:', response);
+      setHistory(response.data.content || []);
     } catch (error) {
       console.error('Failed to load search history:', error);
     }
@@ -41,7 +42,7 @@ const SearchHistory = () => {
 
   const handleClearHistory = async () => {
     try {
-      await searchHistoryApi.clearHistory();
+      await searchHistoryApi.clearSearchHistory();
       setHistory([]);
       setOpenDialog(false);
     } catch (error) {
@@ -49,79 +50,69 @@ const SearchHistory = () => {
     }
   };
 
-  const handleSearch = (query, category) => {
-    navigate('/search', { state: { query, category } });
+  const handleSearch = (query) => {
+    navigate('/', { state: { searchQuery: query } });
   };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h4" gutterBottom>
           Search History
         </Typography>
-
-        {history.length > 0 && (
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => setOpenDialog(true)}
-            sx={{ mb: 2 }}
-          >
-            Clear History
-          </Button>
-        )}
-
-        {history.length === 0 ? (
-          <Typography variant="body1" color="text.secondary" align="center">
-            No search history yet. Start searching for images!
-          </Typography>
-        ) : (
-          <List>
-            {history.map((item) => (
-              <ListItem
-                key={item.id}
-                divider
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                }}
-              >
-                <ListItemText
-                  primary={item.query}
-                  secondary={`${new Date(item.timestamp).toLocaleString()} - Category: ${
-                    item.category || 'All'
-                  }`}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    onClick={() => handleSearch(item.query, item.category)}
-                    sx={{ mr: 1 }}
-                  >
-                    <SearchIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-        )}
-
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Clear Search History</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to clear your entire search history? This action cannot be undone.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={handleClearHistory} color="error">
+        
+        {history.length > 0 ? (
+          <>
+            <List>
+              {history.map((item, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={item.searchQuery}
+                    secondary={`Results: ${item.resultsCount} • ${new Date(item.searchDate).toLocaleString()}`}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleSearch(item.searchQuery)}
+                      sx={{ mr: 1 }}
+                    >
+                      <SearchIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+            
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setOpenDialog(true)}
+              sx={{ mt: 2 }}
+            >
               Clear History
             </Button>
-          </DialogActions>
-        </Dialog>
+          </>
+        ) : (
+          <Typography variant="body1" color="text.secondary">
+            No search history available
+          </Typography>
+        )}
       </Paper>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Clear Search History</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to clear your entire search history? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleClearHistory} color="error">
+            Clear History
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

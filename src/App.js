@@ -76,9 +76,11 @@ const App = () => {
       <Box
         sx={{
           minHeight: '100vh',
+          pt: 8,
+          pb: 10,
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          background: 'linear-gradient(135deg, #d32f2f 0%, #ff1744 100%)',
           '& .MuiContainer-root': {
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
             borderRadius: 2,
@@ -108,7 +110,11 @@ const App = () => {
               />
               <Route
                 path="/search"
-                element={<ImageSearch isAuthenticated={isAuthenticated} />}
+                element={
+                  <PrivateRoute>
+                    <ImageSearch isAuthenticated={isAuthenticated} />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="/favorites"

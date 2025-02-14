@@ -10,10 +10,12 @@ import {
   Typography,
   IconButton,
   Container,
+  Button,
 } from '@mui/material';
-import { Favorite, FavoriteBorder, Comment } from '@mui/icons-material';
+import { Favorite, FavoriteBorder, Comment, CloudUpload } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import ImageDialog from '../images/ImageDialog';
+import ImageDialog from './ImageDialog';
+import UploadDialog from './UploadDialog';
 
 const Gallery = ({ isAuthenticated }) => {
   const [images, setImages] = useState([]);
@@ -21,12 +23,15 @@ const Gallery = ({ isAuthenticated }) => {
   const [favorites, setFavorites] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadRandomImages();
     if (isAuthenticated) {
+      loadUserImages();
       loadFavorites();
+    } else {
+      loadRandomImages();
     }
   }, [isAuthenticated]);
 
@@ -48,6 +53,21 @@ const Gallery = ({ isAuthenticated }) => {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  const loadUserImages = async () => {
+    setLoading(true);
+    try {
+      const response = await imageApi.getUserImages();
+      if (response.data) {
+        setImages(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user images:', error);
+      setImages([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadFavorites = async () => {
@@ -72,31 +92,38 @@ const Gallery = ({ isAuthenticated }) => {
         await favoriteApi.removeFromFavorites(imageId);
         setFavorites(favorites.filter(id => id !== imageId));
       } else {
-        const imageData = {
-          webformatURL: image.webformatURL,
-          pageURL: image.pageURL,
-          type: 'photo',
-          tags: image.tags,
-          previewURL: image.previewURL,
-          largeImageURL: image.largeImageURL,
-          userId: image.user_id?.toString() || '0',
-          fullHDURL: image.fullHDURL,
-          imageURL: image.imageURL,
-          imageWidth: image.imageWidth,
-          imageHeight: image.imageHeight,
-          imageSize: image.imageSize,
-          views: image.views,
-          downloads: image.downloads,
-          likes: image.likes,
-          webformatWidth: image.webformatWidth,
-          webformatHeight: image.webformatHeight,
-          previewWidth: image.previewWidth,
-          previewHeight: image.previewHeight
-        };
-        const savedImage = await imageApi.saveExternal(imageData);
-        const savedImageId = savedImage.data.id;
-        await favoriteApi.addToFavorites(savedImageId);
-        setFavorites([...favorites, savedImageId]);
+        // Jei nuotrauka jau turi ID, tai reiškia kad ji jau išsaugota
+        if (imageId) {
+          await favoriteApi.addToFavorites(imageId);
+          setFavorites([...favorites, imageId]);
+        } else {
+          // Jei nuotrauka neturi ID, pirma ją išsaugome
+          const imageData = {
+            webformatURL: image.webformatURL || image.largeImageURL,  // Naudojame largeImageURL kaip atsarginį variantą
+            pageURL: image.pageURL || '',
+            type: image.type || 'photo',
+            tags: image.tags || '',
+            previewURL: image.previewURL || image.webformatURL || image.largeImageURL,
+            largeImageURL: image.largeImageURL || image.webformatURL,
+            userId: image.user_id?.toString() || '0',
+            fullHDURL: image.fullHDURL || '',
+            imageURL: image.imageURL || '',
+            imageWidth: image.imageWidth || 0,
+            imageHeight: image.imageHeight || 0,
+            imageSize: image.imageSize || 0,
+            views: image.views || 0,
+            downloads: image.downloads || 0,
+            likes: image.likes || 0,
+            webformatWidth: image.webformatWidth || 0,
+            webformatHeight: image.webformatHeight || 0,
+            previewWidth: image.previewWidth || 0,
+            previewHeight: image.previewHeight || 0
+          };
+          const savedImage = await imageApi.saveExternal(imageData);
+          const savedImageId = savedImage.data.id;
+          await favoriteApi.addToFavorites(savedImageId);
+          setFavorites([...favorites, savedImageId]);
+        }
       }
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
@@ -104,7 +131,34 @@ const Gallery = ({ isAuthenticated }) => {
   };
 
   const handleImageClick = (image) => {
-    setSelectedImage(image);
+    console.log('Original image:', image);
+    // Jei tai yra Pixabay nuotrauka
+    if (image.webformatURL || image.largeImageURL) {
+      const pixabayImage = {
+        ...image,
+        webformatURL: image.webformatURL,
+        largeImageURL: image.largeImageURL,
+        previewURL: image.previewURL || image.webformatURL,
+        type: 'photo',
+        tags: image.tags || '',
+        user_id: image.user_id || '0'
+      };
+      console.log('Setting Pixabay image:', pixabayImage);
+      setSelectedImage(pixabayImage);
+    } else {
+      // Jei tai yra įkelta nuotrauka
+      const uploadedImage = {
+        ...image,
+        webformatURL: `/uploads/${image.fileName}`,
+        largeImageURL: `/uploads/${image.fileName}`,
+        previewURL: `/uploads/${image.fileName}`,
+        type: 'photo',
+        tags: image.tags || '',
+        user_id: '0'
+      };
+      console.log('Setting uploaded image:', uploadedImage);
+      setSelectedImage(uploadedImage);
+    }
     setDialogOpen(true);
   };
 
@@ -113,25 +167,37 @@ const Gallery = ({ isAuthenticated }) => {
     setSelectedImage(null);
   };
 
+  const handleUploadSuccess = () => {
+    loadUserImages();
+  };
+
   return (
     <Box>
       <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h2" component="h1" gutterBottom>
-          Photography – The Magic of a Moment
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Photography is more than just an image. It is a moment frozen in time, an emotion preserved forever. 
-          Every photograph tells its own story—sometimes joyful, sometimes melancholic, and sometimes mesmerizing with mystery.
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Light and shadows dance like a painter's brushstrokes, colors breathe life, and details reveal the beauty 
-          of the world as seen through the heart. A single press of a button can capture a smile, a clear sky, 
-          the last rays of a sunset, or eyes that hold an entire universe.
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Photography is an art form that allows us to return to the past and relive our most treasured moments. 
-          It connects the past, present, and future because what was once fleeting becomes eternal.
-        </Typography>
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: 800, 
+          mx: 'auto', 
+          p: 3,
+          background: 'linear-gradient(45deg, rgba(26, 26, 26, 0.95) 0%, rgba(51, 51, 51, 0.95) 100%)',
+          borderRadius: '20px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(10px)',
+          color: 'white'
+        }}>
+          <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ fontFamily: "'Permanent Marker', cursive", color: 'white' }}>
+            Photography – The Magic of a Moment
+          </Typography>
+          <Typography variant="body1" paragraph align="center" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            Photography is more than just an image. It is a moment frozen in time, an emotion preserved forever. Every photograph tells its own story—sometimes joyful, sometimes melancholic, and sometimes mesmerizing with mystery.
+          </Typography>
+          <Typography variant="body1" paragraph align="center" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            Light and shadows dance like a painter's brushstrokes, colors breathe life, and details reveal the beauty of the world as seen through the heart. A single press of a button can capture a smile, a clear sky, the last rays of a sunset, or eyes that hold an entire universe.
+          </Typography>
+          <Typography variant="body1" paragraph align="center" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            Photography is an art form that allows us to return to the past and relive our most treasured moments. It connects the past, present, and future because what we capture today becomes tomorrow's memory.
+          </Typography>
+        </Box>
       </Container>
       <Container maxWidth="xl">
         <Grid container spacing={3}>
@@ -172,11 +238,22 @@ const Gallery = ({ isAuthenticated }) => {
 
         <ImageDialog
           open={dialogOpen}
-          onClose={handleDialogClose}
+          onClose={() => {
+            setDialogOpen(false);
+            if (isAuthenticated) {
+              loadFavorites(); // Atnaujinti favorites būseną po dialogo uždarymo
+            }
+          }}
           image={selectedImage}
           isAuthenticated={isAuthenticated}
           isFavorite={selectedImage ? favorites.includes(selectedImage.id) : false}
-          onFavoriteToggle={(image) => toggleFavorite(image.id, image)}
+          onFavoriteToggle={toggleFavorite}
+        />
+
+        <UploadDialog
+          open={uploadDialogOpen}
+          onClose={() => setUploadDialogOpen(false)}
+          onUploadSuccess={handleUploadSuccess}
         />
       </Container>
     </Box>

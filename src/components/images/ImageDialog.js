@@ -124,7 +124,63 @@ const ImageDialog = ({ open, onClose, image, isAuthenticated, isFavorite, onFavo
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
-              onClick={() => onFavoriteToggle(image.id)}
+              onClick={async () => {
+                if (!isAuthenticated) return;
+                try {
+                  console.log('Image in dialog:', image);
+                  // First save the image if it's not already saved
+                  if (!image.id) {
+                    // Jei tai yra įkelta nuotrauka, naudojame jos URL
+                    if (image.fileName) {
+                      const imageUrl = `/uploads/${image.fileName}`;
+                      const imageData = {
+                        webformatURL: imageUrl,
+                        pageURL: window.location.href,
+                        type: 'photo',
+                        tags: '',
+                        previewURL: imageUrl,
+                        largeImageURL: imageUrl,
+                        userId: '0',
+                        imageWidth: 800,
+                        imageHeight: 600
+                      };
+                      console.log('Saving uploaded image:', imageData);
+                      const response = await imageApi.saveExternal(imageData);
+                      console.log('Save response:', response);
+                      image.id = response.data.id;
+                    } else {
+                      // Jei tai yra pixabay nuotrauka
+                      const imageData = {
+                        webformatURL: image.webformatURL,
+                        pageURL: image.pageURL || window.location.href,
+                        type: 'photo',
+                        tags: image.tags || '',
+                        previewURL: image.previewURL || image.webformatURL,
+                        largeImageURL: image.largeImageURL || image.webformatURL,
+                        userId: image.user_id?.toString() || '0',
+                        imageWidth: image.imageWidth || 800,
+                        imageHeight: image.imageHeight || 600,
+                        imageSize: image.imageSize || 0,
+                        views: image.views || 0,
+                        downloads: image.downloads || 0,
+                        likes: image.likes || 0,
+                        webformatWidth: image.webformatWidth || 800,
+                        webformatHeight: image.webformatHeight || 600,
+                        previewWidth: image.previewWidth || 400,
+                        previewHeight: image.previewHeight || 300
+                      };
+                      console.log('Saving pixabay image:', imageData);
+                      const response = await imageApi.saveExternal(imageData);
+                      console.log('Save response:', response);
+                      image.id = response.data.id;
+                    }
+                  }
+                  // Now toggle favorite
+                  onFavoriteToggle();
+                } catch (error) {
+                  console.error('Failed to toggle favorite:', error);
+                }
+              }}
               color={isFavorite ? 'primary' : 'default'}
               disabled={!isAuthenticated}
             >
